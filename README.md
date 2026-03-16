@@ -1,7 +1,7 @@
 <!-- LOGO -->
 <h1>
 <p align="center">
-  <img src="Notty.app/Contents/Resources/AppIcon.icns" alt="Notty" width="128">
+  <img src="Notty.app/Contents/Resources/icon.png" alt="Notty" width="128">
   <br>Notty
 </h1>
   <p align="center">
