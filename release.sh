@@ -15,7 +15,21 @@ if [ -z "$VERSION" ]; then
     exit 1
 fi
 
-echo "==> Push du code..."
+# Strip the "v" prefix for version number (v1.1 -> 1.1)
+VERSION_NUM=${VERSION#v}
+
+echo "==> Updating Info.plist to $VERSION_NUM..."
+PLIST="Notty.app/Contents/Info.plist"
+sed -i '' "s|<string>[0-9]*\.[0-9]*</string><!-- CFBundleVersion -->|<string>$VERSION_NUM</string><!-- CFBundleVersion -->|" "$PLIST"
+# Update both version keys
+plutil -replace CFBundleVersion -string "$VERSION_NUM" "$PLIST"
+plutil -replace CFBundleShortVersionString -string "$VERSION_NUM" "$PLIST"
+
+echo "==> Committing version bump..."
+git add "$PLIST"
+git commit -m "[MODIFIED]: bump version to $VERSION" --allow-empty
+
+echo "==> Pushing code..."
 git push origin main
 
 echo "==> Création de la release $VERSION..."
