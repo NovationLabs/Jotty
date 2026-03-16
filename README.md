@@ -113,7 +113,3 @@ runs in terminal mode. No arguments launches the menu bar app.
 - **Build**: `swiftc` via Makefile
 - **Dependencies**: None
 - **Font**: Space Mono (fallback: system monospace)
-
-## License
-
-MIT
