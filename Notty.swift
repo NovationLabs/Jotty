@@ -16,12 +16,9 @@ class NotePanel: NSPanel {
         let loc = event.locationInWindow
         let f = frame
         // Check if the click is in one of the 4 corners
-        let inBottomLeft  = loc.x < cornerSize && loc.y < cornerSize
         let inBottomRight = loc.x > f.width - cornerSize && loc.y < cornerSize
-        let inTopLeft     = loc.x < cornerSize && loc.y > f.height - cornerSize
-        let inTopRight    = loc.x > f.width - cornerSize && loc.y > f.height - cornerSize
 
-        if inBottomLeft || inBottomRight || inTopLeft || inTopRight {
+        if inBottomRight {
             performResize(from: event)
         } else {
             super.mouseDown(with: event)
@@ -50,6 +47,26 @@ class NotePanel: NSPanel {
 
             let newOriginY = startFrame.origin.y + (startFrame.height - newHeight)
             setFrame(NSRect(x: startFrame.origin.x, y: newOriginY, width: newWidth, height: newHeight), display: true)
+        }
+    }
+}
+
+// --- Resize grip: 3 diagonal lines (macOS style) ---
+class ResizeGripView: NSView {
+    override func draw(_ dirtyRect: NSRect) {
+        guard let ctx = NSGraphicsContext.current?.cgContext else { return }
+        let color = NSColor(white: 1.0, alpha: 0.35).cgColor
+        ctx.setStrokeColor(color)
+        ctx.setLineWidth(1.0)
+        ctx.setLineCap(.round)
+
+        let s = bounds.width
+        // 3 diagonal lines from bottom-left to top-right
+        for i in 0..<3 {
+            let offset = CGFloat(i) * 4
+            ctx.move(to: CGPoint(x: s - 2 - offset, y: 1))
+            ctx.addLine(to: CGPoint(x: s - 1, y: 2 + offset))
+            ctx.strokePath()
         }
     }
 }
@@ -154,6 +171,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         scrollView.documentView = textView
         container.addSubview(scrollView)
+
+        // --- 6. Resize grip indicator (bottom-right corner) ---
+        let grip = ResizeGripView(frame: NSRect(x: 320 - 20, y: 4, width: 14, height: 14))
+        grip.autoresizingMask = [.minXMargin, .maxYMargin]
+        container.addSubview(grip)
+
         panel.contentView = container
 
         // --- 6. Load saved text ---

@@ -1,0 +1,19 @@
+name: CI Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Notty
+        run: make all
+
+      - name: Verify binary exists
+        run: test -f Notty.app/Contents/MacOS/Notty
