@@ -26,8 +26,8 @@ jobs:
           git checkout main
           git pull origin main
           git add Notty.app/Contents/Info.plist
-          git commit -m "[MODIFIED]: bump version to $VERSION"
-          git push origin main
+          git diff --cached --quiet || git commit -m "[MODIFIED]: bump version to $VERSION"
+          git push origin main || true
 
       - name: Update CHANGELOG
         run: |
