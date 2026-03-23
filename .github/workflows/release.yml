@@ -31,12 +31,27 @@ jobs:
           VERSION=${{ github.ref_name }}
           DATE=$(date +%Y-%m-%d)
           PREV_TAG=$(git tag --sort=-creatordate | grep -v "^${VERSION}$" | head -1)
-          COMMITS=$(git log ${PREV_TAG}..HEAD --pretty=format:"- %s" --no-merges | grep -v "bump version")
-          ENTRY="## [${VERSION}] — ${DATE}\n\n${COMMITS}\n\n---\n\n"
-          sed -i '' "s/# Changelog/# Changelog\n\n${ENTRY}/" CHANGELOG.md
+          COMMITS=$(git log ${PREV_TAG}..HEAD --pretty=format:"- %s" --no-merges | grep -v "bump version" | grep -v "update CHANGELOG")
+
+          # Pull latest main (previous step may have pushed)
+          git fetch origin main
+          git checkout main
+          git pull origin main
+
+          # Prepend new entry to CHANGELOG using Python (avoids sed \n issues)
+          python3 - <<EOF
+import re
+with open("CHANGELOG.md", "r") as f:
+    content = f.read()
+entry = f"## [{VERSION}] — {DATE}\n\n{COMMITS}\n\n---\n\n"
+content = content.replace("# Changelog\n", f"# Changelog\n\n{entry}", 1)
+with open("CHANGELOG.md", "w") as f:
+    f.write(content)
+EOF
+
           git add CHANGELOG.md
-          git commit -m "[MODIFIED]: update CHANGELOG for $VERSION"
-          git push origin HEAD:main
+          git diff --cached --quiet || git commit -m "[MODIFIED]: update CHANGELOG for $VERSION"
+          git push origin main
 
       - name: Build Notty
         run: make all
