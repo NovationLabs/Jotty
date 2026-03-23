@@ -1,5 +1,13 @@
 # Changelog
 
+## [v1.1.4] — 2026-03-23
+
+- [MODIFIED]: handle already-up-to-date Info.plist in release workflow
+- [ADD]: draggable header with open/closed hand cursor
+- [MODIFIED]: integrate Homebrew update into release workflow
+
+---
+
 All notable changes to the Notty app are documented here.
 
 ---
