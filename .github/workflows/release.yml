@@ -13,6 +13,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          fetch-depth: 0
 
       - name: Bump version in Info.plist
         run: |
@@ -22,33 +23,22 @@ jobs:
           plutil -replace CFBundleShortVersionString -string "$VERSION_NUM" Notty.app/Contents/Info.plist
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
+          git checkout main
+          git pull origin main
           git add Notty.app/Contents/Info.plist
           git commit -m "[MODIFIED]: bump version to $VERSION"
-          git push origin HEAD:main
+          git push origin main
 
       - name: Update CHANGELOG
         run: |
           VERSION=${{ github.ref_name }}
           DATE=$(date +%Y-%m-%d)
           PREV_TAG=$(git tag --sort=-creatordate | grep -v "^${VERSION}$" | head -1)
-          COMMITS=$(git log ${PREV_TAG}..HEAD --pretty=format:"- %s" --no-merges | grep -v "bump version" | grep -v "update CHANGELOG")
-
-          # Pull latest main (previous step may have pushed)
-          git fetch origin main
-          git checkout main
+          COMMITS=$(git log ${PREV_TAG}..HEAD --pretty=format:"- %s" --no-merges | grep -v "bump version" | grep -v "CHANGELOG")
           git pull origin main
-
-          # Prepend new entry to CHANGELOG using Python (avoids sed \n issues)
-          python3 - <<EOF
-import re
-with open("CHANGELOG.md", "r") as f:
-    content = f.read()
-entry = f"## [{VERSION}] — {DATE}\n\n{COMMITS}\n\n---\n\n"
-content = content.replace("# Changelog\n", f"# Changelog\n\n{entry}", 1)
-with open("CHANGELOG.md", "w") as f:
-    f.write(content)
-EOF
-
+          # Prepend new entry using bash (avoids sed \n portability issues)
+          { echo "# Changelog"; echo ""; echo "## [${VERSION}] — ${DATE}"; echo ""; echo "${COMMITS}"; echo ""; echo "---"; tail -n +2 CHANGELOG.md; } > /tmp/changelog_new.md
+          mv /tmp/changelog_new.md CHANGELOG.md
           git add CHANGELOG.md
           git diff --cached --quiet || git commit -m "[MODIFIED]: update CHANGELOG for $VERSION"
           git push origin main
@@ -72,13 +62,10 @@ EOF
           VERSION=${{ github.ref_name }}
           URL="https://github.com/NovationLabs/Notty/archive/refs/tags/${VERSION}.tar.gz"
           SHA=$(curl -sL "$URL" | shasum -a 256 | awk '{print $1}')
-
           git clone https://x-access-token:${{ secrets.HOMEBREW_TAP_TOKEN }}@github.com/NovationLabs/homebrew-notty.git
           cd homebrew-notty
-
           sed -i '' "s|url \".*\"|url \"${URL}\"|" Formula/notty.rb
           sed -i '' "s|sha256 \".*\"|sha256 \"${SHA}\"|" Formula/notty.rb
-
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git add Formula/notty.rb
