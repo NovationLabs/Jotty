@@ -25,3 +25,21 @@ jobs:
         with:
           files: Notty.dmg
           generate_release_notes: true
+
+      - name: Update Homebrew formula
+        run: |
+          VERSION=${{ github.ref_name }}
+          URL="https://github.com/NovationLabs/Notty/archive/refs/tags/${VERSION}.tar.gz"
+          SHA=$(curl -sL "$URL" | shasum -a 256 | awk '{print $1}')
+
+          git clone https://x-access-token:${{ secrets.HOMEBREW_TAP_TOKEN }}@github.com/NovationLabs/homebrew-notty.git
+          cd homebrew-notty
+
+          sed -i '' "s|url \".*\"|url \"${URL}\"|" Formula/notty.rb
+          sed -i '' "s|sha256 \".*\"|sha256 \"${SHA}\"|" Formula/notty.rb
+
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add Formula/notty.rb
+          git commit -m "[MODIFIED]: bump to ${VERSION}"
+          git push
