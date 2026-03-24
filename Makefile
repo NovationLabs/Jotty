@@ -2,7 +2,7 @@ APP_NAME = Notty
 BUNDLE = $(APP_NAME).app
 BINARY = $(BUNDLE)/Contents/MacOS/$(APP_NAME)
 
-.PHONY: all run clean re kill dmg
+.PHONY: all run clean re kill dmg install
 
 all: $(BINARY)
 
@@ -27,8 +27,8 @@ clean:
 
 # Install "nt" and "notty" commands globally
 install: all
-	ln -sf $(realpath $(BINARY)) /usr/local/bin/nt
-	ln -sf $(realpath $(BINARY)) /usr/local/bin/notty
+	@ln -sf $(realpath $(BINARY)) /usr/local/bin/nt 2>&1
+	@ln -sf $(realpath $(BINARY)) /usr/local/bin/notty 2>&1
 	@echo "Commands 'nt' and 'notty' installed. Type 'nt help' for options."
 
 # Create .dmg installer using DMGMaker (custom Notty background)
